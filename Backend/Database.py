@@ -79,3 +79,65 @@ def verify_login(email, password):
     return None
 
 
+import uuid
+from datetime import datetime, timezone
+
+complaints = db["complaints"]
+complaints.create_index("cid", unique=True)
+complaints.create_index("uid")  # fast lookup of a user's complaints
+
+UPLOAD_DIR = Path(__file__).resolve().parent / "uploads"
+UPLOAD_DIR.mkdir(exist_ok=True)
+
+ALLOWED_EXT = {".jpg", ".jpeg", ".png", ".webp"}
+
+
+def get_next_id(name):
+    """Generic atomic auto-increment for any sequence name."""
+    doc = counters.find_one_and_update(
+        {"_id": name},
+        {"$inc": {"seq": 1}},
+        upsert=True,
+        return_document=ReturnDocument.AFTER,
+    )
+    return doc["seq"]
+
+
+def save_image(file_bytes, original_filename):
+    """Saves an image to uploads/ and returns the stored filename."""
+    ext = Path(original_filename).suffix.lower()
+    if ext not in ALLOWED_EXT:
+        raise ValueError(f"Unsupported image type: {ext}")
+    filename = f"{uuid.uuid4().hex}{ext}"   # unique name, avoids overwrites
+    (UPLOAD_DIR / filename).write_bytes(file_bytes)
+    return filename
+
+
+def create_complaint(uid, title, category, location, description, images=None):
+    """
+    images: list of (file_bytes, original_filename) tuples, or None.
+    """
+    if not users.find_one({"uid": uid}):
+        raise ValueError("User does not exist")
+
+    photo_names = [save_image(data, name) for data, name in (images or [])]
+
+    complaint = {
+        "cid": get_next_id("complaint_cid"),
+        "uid": uid,
+        "title": title.strip(),
+        "category": category,
+        "location": location,
+        "description": description,
+        "photos": photo_names,           # list of filenames
+        "status": "pending",
+        "created_at": datetime.now(timezone.utc),
+    }
+    complaints.insert_one(complaint)
+    return complaint["cid"]
+
+
+def get_user_complaints(uid):
+    return list(complaints.find({"uid": uid}, {"_id": 0}).sort("created_at", -1))
+
+
