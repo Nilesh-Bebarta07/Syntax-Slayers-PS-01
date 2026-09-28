@@ -1,15 +1,4 @@
-/* =========================================================
-   Campus Fix: frontend logic
-   ---------------------------------------------------------
-   All data lives in localStorage through the `api` object
-   below, so the UI works with no backend. When your backend
-   is ready, replace the body of each api.* function with a
-   fetch() call and keep the rest of the file as it is.
 
-   DEMO ONLY: passwords are stored as plain text here.
-   The real backend must hash them (bcrypt) and issue a
-   token or session cookie.
-   ========================================================= */
 
 const CATEGORIES = ["Electrical", "Water & Plumbing", "Cleanliness", "Network & IT", "Furniture & Equipment", "Other"];
 const STATUSES = ["Submitted", "Assigned", "In progress", "Resolved"];
