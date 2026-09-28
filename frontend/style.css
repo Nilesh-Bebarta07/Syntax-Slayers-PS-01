@@ -1,0 +1,235 @@
+/* ---------- Tokens ---------- */
+:root {
+  --slate: #1d2733;
+  --slate-2: #2c3947;
+  --paper: #f3f5f7;
+  --white: #ffffff;
+  --hivis: #ffc60a;       /* safety-vest yellow: the one loud accent */
+  --line: #d7dde3;
+  --text: #1d2733;
+  --muted: #5d6b79;
+  --danger: #b3261e;
+
+  --s-submitted: #5d6b79;
+  --s-assigned: #2f6fb3;
+  --s-progress: #b7791f;
+  --s-resolved: #2b8a57;
+
+  --font-head: "Archivo", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, sans-serif;
+  --radius: 6px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--paper);
+}
+
+h1, h2, h3 { font-family: var(--font-head); line-height: 1.15; margin: 0; }
+h2 { font-size: 1.5rem; margin-bottom: 1rem; }
+h3 { font-size: 1.05rem; }
+
+:focus-visible { outline: 3px solid var(--hivis); outline-offset: 2px; }
+
+/* ---------- Brand ---------- */
+.brand {
+  display: flex; align-items: center; gap: .6rem;
+  font-family: var(--font-head); font-weight: 800; font-size: 1.15rem;
+}
+.brand-mark {
+  width: 22px; height: 22px; border-radius: 4px;
+  background: repeating-linear-gradient(-45deg, var(--hivis) 0 6px, var(--slate) 6px 12px);
+  border: 2px solid var(--hivis);
+}
+
+/* ---------- Forms & buttons ---------- */
+label { display: block; font-weight: 500; font-size: .92rem; margin-bottom: 1rem; }
+label small { display: block; color: var(--muted); font-weight: 400; margin-top: .25rem; }
+
+input, select, textarea {
+  display: block; width: 100%; margin-top: .35rem;
+  padding: .65rem .75rem;
+  font: inherit; color: inherit;
+  background: var(--white);
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
+}
+input:focus, select:focus, textarea:focus { border-color: var(--slate); }
+input[type="file"] { padding: .5rem; }
+textarea { resize: vertical; }
+
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+.btn {
+  font: inherit; font-weight: 600; cursor: pointer;
+  padding: .7rem 1.2rem; border-radius: var(--radius);
+  border: 2px solid transparent;
+}
+.btn-primary { background: var(--hivis); color: var(--slate); border-color: var(--slate); width: 100%; }
+.btn-primary:hover { background: #ffd23f; }
+.btn-ghost { background: transparent; border-color: var(--line); color: var(--text); padding: .45rem .9rem; }
+.btn-ghost:hover { border-color: var(--slate); }
+
+.form-error {
+  margin: 0 0 1rem; padding: .6rem .8rem;
+  background: #fdecea; color: var(--danger);
+  border-left: 4px solid var(--danger); border-radius: 3px; font-size: .92rem;
+}
+.hint { color: var(--muted); font-size: .85rem; margin: 1rem 0 0; }
+code { background: var(--paper); padding: .1rem .35rem; border-radius: 3px; font-size: .85em; }
+
+/* ---------- Auth screen ---------- */
+.auth { display: grid; grid-template-columns: 1.1fr 1fr; min-height: 100vh; }
+
+.auth-hero {
+  background: var(--slate); color: var(--white);
+  padding: 2.5rem clamp(1.5rem, 5vw, 4rem);
+  display: flex; flex-direction: column; gap: 3rem;
+}
+.auth-hero h1 { font-size: clamp(1.9rem, 3.6vw, 3rem); font-weight: 800; max-width: 18ch; }
+
+/* The memorable element: a complaint ticket that advances once on load */
+.stub {
+  margin-top: auto; max-width: 30rem;
+  background: var(--white); color: var(--text);
+  border-radius: var(--radius); padding: 1.25rem;
+  border-left: 8px solid var(--hivis);
+  box-shadow: 0 0 0 1px rgba(255,255,255,.08);
+}
+.stub-top { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; }
+.stub-foot { margin: .9rem 0 0; color: var(--muted); font-size: .88rem; }
+
+.auth-panel { display: grid; place-items: center; padding: 2rem 1.25rem; }
+.auth-card { width: 100%; max-width: 26rem; }
+
+.tabs { display: flex; gap: 0; margin-bottom: 1.5rem; border-bottom: 2px solid var(--line); }
+.tab {
+  flex: 1; font: inherit; font-family: var(--font-head); font-weight: 700; font-size: 1.05rem;
+  background: none; border: 0; padding: .8rem; cursor: pointer; color: var(--muted);
+  border-bottom: 4px solid transparent; margin-bottom: -2px;
+}
+.tab.active { color: var(--text); border-bottom-color: var(--hivis); }
+
+/* ---------- Progress track (used for complaint status) ---------- */
+.track {
+  list-style: none; margin: 1rem 0 0; padding: 0;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;
+}
+.track li {
+  font-size: .78rem; color: var(--muted); padding-top: .5rem; position: relative;
+}
+.track li::before {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 6px;
+  background: var(--line); border-radius: 3px;
+}
+.track li.done { color: var(--text); }
+.track li.done::before { background: var(--slate); }
+.track li.current { font-weight: 600; }
+.track li.current::before { background: var(--hivis); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .track-demo li::before { transform-origin: left; animation: fill .5s ease-out backwards; }
+  .track-demo li:nth-child(1)::before { animation-delay: .3s; }
+  .track-demo li:nth-child(2)::before { animation-delay: .8s; }
+  .track-demo li:nth-child(3)::before { animation-delay: 1.3s; }
+  @keyframes fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+}
+
+/* ---------- App shell ---------- */
+.topbar {
+  display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+  padding: .8rem clamp(1rem, 4vw, 2.5rem);
+  background: var(--slate); color: var(--white);
+}
+.topbar .btn-ghost { color: var(--white); border-color: rgba(255,255,255,.3); }
+.topbar .btn-ghost:hover { border-color: var(--hivis); }
+.topbar-right { display: flex; align-items: center; gap: .8rem; flex-wrap: wrap; }
+.who { font-weight: 500; }
+.role-badge {
+  background: var(--hivis); color: var(--slate);
+  font-size: .78rem; font-weight: 700; padding: .15rem .55rem; border-radius: 99px;
+}
+
+.page { max-width: 68rem; margin: 0 auto; padding: 2rem clamp(1rem, 4vw, 2.5rem) 4rem; }
+.user-grid { display: grid; grid-template-columns: minmax(0, 24rem) minmax(0, 1fr); gap: 2rem; align-items: start; }
+
+.card {
+  background: var(--white); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 1.5rem;
+}
+.card .btn-primary { margin-top: .5rem; }
+
+.photo-preview { max-width: 100%; max-height: 180px; border-radius: var(--radius); margin-bottom: 1rem; }
+
+.stack { display: grid; gap: 1rem; }
+
+/* ---------- Complaint tickets ---------- */
+.ticket {
+  background: var(--white); border: 1px solid var(--line);
+  border-left: 6px solid var(--s-submitted);
+  border-radius: var(--radius); padding: 1.1rem 1.25rem;
+}
+.ticket.s-assigned { border-left-color: var(--s-assigned); }
+.ticket.s-progress { border-left-color: var(--s-progress); }
+.ticket.s-resolved { border-left-color: var(--s-resolved); }
+
+.ticket-head { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; }
+.ticket-meta { display: flex; flex-wrap: wrap; gap: .25rem 1.25rem; margin: .4rem 0 .6rem; font-size: .85rem; color: var(--muted); }
+.ticket p { margin: .3rem 0; }
+.ticket img.evidence { max-width: 220px; max-height: 140px; object-fit: cover; border-radius: var(--radius); margin-top: .5rem; border: 1px solid var(--line); }
+.ticket .assigned { font-size: .88rem; color: var(--muted); margin-top: .8rem; }
+
+.badge {
+  flex-shrink: 0; font-size: .78rem; font-weight: 600;
+  padding: .15rem .6rem; border-radius: 99px; color: var(--white); background: var(--s-submitted);
+}
+.status-assigned { background: var(--s-assigned); }
+.status-progress { background: var(--s-progress); }
+.status-resolved { background: var(--s-resolved); }
+
+.empty {
+  border: 2px dashed var(--line); border-radius: var(--radius);
+  padding: 2rem 1.25rem; text-align: center; color: var(--muted);
+}
+
+/* ---------- Admin ---------- */
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+.stat { background: var(--white); border: 1px solid var(--line); border-radius: var(--radius); padding: 1rem 1.25rem; }
+.stat b { display: block; font-family: var(--font-head); font-size: 2rem; line-height: 1; }
+.stat span { color: var(--muted); font-size: .88rem; }
+.stat.total { background: var(--slate); color: var(--white); border-color: var(--slate); }
+.stat.total span { color: #b9c3cd; }
+
+.filters { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1rem; }
+.filters label { margin-bottom: 0; }
+
+.admin-controls {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+  margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--line);
+}
+.admin-controls label { margin-bottom: 0; }
+
+/* ---------- Toast ---------- */
+.toast {
+  position: fixed; left: 50%; bottom: 1.5rem; transform: translateX(-50%);
+  background: var(--slate); color: var(--white);
+  padding: .7rem 1.2rem; border-radius: var(--radius); border-left: 6px solid var(--hivis);
+  box-shadow: 0 6px 20px rgba(0,0,0,.25); z-index: 10;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 860px) {
+  .auth { grid-template-columns: 1fr; }
+  .auth-hero { gap: 1.5rem; padding-bottom: 2rem; }
+  .stub { margin-top: 0; }
+  .user-grid { grid-template-columns: 1fr; }
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  .filters, .admin-controls, .row { grid-template-columns: 1fr; }
+}
