@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
-import bcrypt  # pip install bcrypt
+import bcrypt
 import certifi
 from dotenv import load_dotenv
 from pymongo import MongoClient, ReturnDocument
@@ -33,7 +33,6 @@ client = MongoClient(
 
 db = client["ps_01"]
 
-# Test connection
 try:
     client.admin.command("ping")
     print("MongoDB Atlas connected successfully!")
@@ -50,16 +49,23 @@ complaints = db["complaints"]
 
 SESSION_DAYS = 7
 
-# One-time setup: unique keys, fast lookups, auto-expiring sessions
+# ---------------------------------------------------------------
+# Indexes
+# ---------------------------------------------------------------
 users.create_index("email", unique=True)
 users.create_index("uid", unique=True)
+
 sessions.create_index("token", unique=True)
-sessions.create_index("created_at", expireAfterSeconds=SESSION_DAYS * 24 * 60 * 60)
+sessions.create_index(
+    "created_at",
+    expireAfterSeconds=SESSION_DAYS * 24 * 60 * 60,
+)
+
 complaints.create_index("cid", unique=True)
-complaints.create_index("uid")  # fast lookup of a user's complaints
+complaints.create_index("uid")
 
 # ---------------------------------------------------------------
-# Allowed values (must match the frontend)
+# Allowed values
 # ---------------------------------------------------------------
 CATEGORIES = [
     "Electrical",
@@ -69,20 +75,41 @@ CATEGORIES = [
     "Furniture & Equipment",
     "Other",
 ]
-STATUSES = ["Submitted", "Assigned", "In progress", "Resolved"]
-DEPARTMENTS = ["Electrical", "Plumbing", "Housekeeping", "IT Services", "Maintenance"]
 
+STATUSES = [
+    "Submitted",
+    "Assigned",
+    "In progress",
+    "Resolved",
+]
+
+DEPARTMENTS = [
+    "Electrical",
+    "Plumbing",
+    "Housekeeping",
+    "IT Services",
+    "Maintenance",
+]
+
+# ---------------------------------------------------------------
+# Upload configuration
+# ---------------------------------------------------------------
 UPLOAD_DIR = Path(__file__).resolve().parent / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
 
-ALLOWED_EXT = {".jpg", ".jpeg", ".png", ".webp"}
+ALLOWED_EXT = {
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".webp",
+}
 
 
 # ---------------------------------------------------------------
 # Counters
 # ---------------------------------------------------------------
 def get_next_id(name):
-    """Generic atomic auto-increment for any sequence name."""
+    """Atomically increment and return the next ID."""
     doc = counters.find_one_and_update(
         {"_id": name},
         {"$inc": {"seq": 1}},
@@ -93,7 +120,7 @@ def get_next_id(name):
 
 
 def get_next_uid():
-    """Atomically increments and returns the next user uid (1, 2, 3, ...)."""
+    """Atomically return the next user UID."""
     return get_next_id("user_uid")
 
 
@@ -101,14 +128,20 @@ def get_next_uid():
 # Users
 # ---------------------------------------------------------------
 def create_user(email, name, password, is_admin=False):
-    hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
+    """Create a user and return their UID."""
+    hashed = bcrypt.hashpw(
+        password.encode("utf-8"),
+        bcrypt.gensalt(),
+    )
+
     user = {
         "uid": get_next_uid(),
         "email": email.strip().lower(),
         "name": name.strip(),
-        "password": hashed,  # never store plain text
+        "password": hashed,
         "is_admin": is_admin,
     }
+
     try:
         users.insert_one(user)
         return user["uid"]
@@ -117,132 +150,163 @@ def create_user(email, name, password, is_admin=False):
 
 
 def verify_login(email, password):
-    user = users.find_one({"email": email.strip().lower()})
+    """Return the user if credentials are valid, otherwise None."""
+    user = users.find_one(
+        {"email": email.strip().lower()}
+    )
+
     if not user:
         return None
+
     try:
-        if bcrypt.checkpw(password.encode("utf-8"), user["password"]):
+        if bcrypt.checkpw(
+            password.encode("utf-8"),
+            user["password"],
+        ):
             return user
-    except ValueError:
-        pass  # e.g. password longer than bcrypt's 72-byte limit
+    except (ValueError, TypeError):
+        # bcrypt has a 72-byte password limit.
+        pass
+
     return None
 
 
-<<<<<<< HEAD
 def get_user_by_uid(uid):
+    """Return a user by UID."""
     return users.find_one({"uid": uid})
 
 
 def seed_admin():
-    """Creates the demo admin once. Safe to call on every startup."""
+    """Create the demo admin once. Safe to call on every startup."""
     email = "admin@campus.edu"
+
     if users.find_one({"email": email}):
         return
+
     password = os.getenv("ADMIN_PASSWORD", "admin123")
+
     try:
-        create_user(email, "Campus Admin", password, is_admin=True)
+        create_user(
+            email,
+            "Campus Admin",
+            password,
+            is_admin=True,
+        )
         print("Demo admin created:", email)
     except ValueError:
-        pass  # another process created it first
+        # Another process may have created it first.
+        pass
 
 
 # ---------------------------------------------------------------
-# Sessions (login tokens)
+# Sessions
 # ---------------------------------------------------------------
 def create_session(uid):
-    """Saves a new login token for this user and returns it."""
+    """Create a login token for a user."""
     token = secrets.token_hex(24)
-    sessions.insert_one({
-        "token": token,
-        "uid": uid,
-        "created_at": datetime.now(timezone.utc),
-    })
+
+    sessions.insert_one(
+        {
+            "token": token,
+            "uid": uid,
+            "created_at": datetime.now(timezone.utc),
+        }
+    )
+
     return token
 
 
 def get_user_by_token(token):
-    """Returns the user document for a valid token, otherwise None."""
+    """Return the user associated with a valid session token."""
+    if not token:
+        return None
+
     session = sessions.find_one({"token": token})
+
     if not session:
         return None
+
     return get_user_by_uid(session["uid"])
 
 
 def delete_session(token):
+    """Delete a login session."""
     sessions.delete_one({"token": token})
 
 
 # ---------------------------------------------------------------
-# Complaints
+# Complaints - Images
 # ---------------------------------------------------------------
-=======
-import uuid
-from datetime import datetime, timezone
-
-complaints = db["complaints"]
-complaints.create_index("cid", unique=True)
-complaints.create_index("uid")  # fast lookup of a user's complaints
-
-UPLOAD_DIR = Path(__file__).resolve().parent / "uploads"
-UPLOAD_DIR.mkdir(exist_ok=True)
-
-ALLOWED_EXT = {".jpg", ".jpeg", ".png", ".webp"}
-
-
-def get_next_id(name):
-    """Generic atomic auto-increment for any sequence name."""
-    doc = counters.find_one_and_update(
-        {"_id": name},
-        {"$inc": {"seq": 1}},
-        upsert=True,
-        return_document=ReturnDocument.AFTER,
-    )
-    return doc["seq"]
-
-
->>>>>>> e10a54bbca48cabcf13d5bca90de401f3f2712fe
 def save_image(file_bytes, original_filename):
-    """Saves an image to uploads/ and returns the stored filename."""
+    """Save an image to uploads/ and return its stored filename."""
     ext = Path(original_filename).suffix.lower()
+
     if ext not in ALLOWED_EXT:
-<<<<<<< HEAD
-        raise ValueError("Photos must be .jpg, .jpeg, .png or .webp files.")
-    filename = f"{uuid.uuid4().hex}{ext}"  # unique name, avoids overwrites
-=======
-        raise ValueError(f"Unsupported image type: {ext}")
-    filename = f"{uuid.uuid4().hex}{ext}"   # unique name, avoids overwrites
->>>>>>> e10a54bbca48cabcf13d5bca90de401f3f2712fe
+        raise ValueError(
+            "Photos must be .jpg, .jpeg, .png or .webp files."
+        )
+
+    filename = f"{uuid.uuid4().hex}{ext}"
+
     (UPLOAD_DIR / filename).write_bytes(file_bytes)
+
     return filename
 
 
-def create_complaint(uid, title, category, location, description, images=None):
+# ---------------------------------------------------------------
+# Complaints - Create
+# ---------------------------------------------------------------
+def create_complaint(
+    uid,
+    title,
+    category,
+    location,
+    description,
+    images=None,
+):
     """
-    images: list of (file_bytes, original_filename) tuples, or None.
-<<<<<<< HEAD
-    Returns the new complaint id (cid).
+    Create a complaint.
+
+    images:
+        List of (file_bytes, original_filename) tuples, or None.
+
+    Returns:
+        New complaint ID (cid).
     """
+
     user = users.find_one({"uid": uid})
+
     if not user:
         raise ValueError("User does not exist")
 
     title = title.strip()
     location = location.strip()
     description = description.strip()
+
     if not title or not location or not description:
-        raise ValueError("Fill in the title, location and description.")
+        raise ValueError(
+            "Fill in the title, location and description."
+        )
+
     if category not in CATEGORIES:
         raise ValueError("Choose a valid category.")
 
     images = images or []
-    # Check every file type first so a bad file does not leave earlier ones behind
-    for _, name in images:
-        if Path(name).suffix.lower() not in ALLOWED_EXT:
-            raise ValueError("Photos must be .jpg, .jpeg, .png or .webp files.")
 
-    photo_names = [save_image(data, name) for data, name in images]
+    # Validate all files BEFORE saving any of them.
+    for _, filename in images:
+        if Path(filename).suffix.lower() not in ALLOWED_EXT:
+            raise ValueError(
+                "Photos must be .jpg, .jpeg, .png or .webp files."
+            )
+
+    photo_names = [
+        save_image(data, filename)
+        for data, filename in images
+    ]
 
     now = datetime.now(timezone.utc)
+
     complaint = {
         "cid": get_next_id("complaint_cid"),
         "uid": uid,
@@ -251,80 +315,112 @@ def create_complaint(uid, title, category, location, description, images=None):
         "category": category,
         "location": location,
         "description": description,
-        "photos": photo_names,  # list of filenames
+        "photos": photo_names,
         "status": "Submitted",
         "department": "",
         "created_at": now,
         "updated_at": now,
-=======
-    """
-    if not users.find_one({"uid": uid}):
-        raise ValueError("User does not exist")
-
-    photo_names = [save_image(data, name) for data, name in (images or [])]
-
-    complaint = {
-        "cid": get_next_id("complaint_cid"),
-        "uid": uid,
-        "title": title.strip(),
-        "category": category,
-        "location": location,
-        "description": description,
-        "photos": photo_names,           # list of filenames
-        "status": "pending",
-        "created_at": datetime.now(timezone.utc),
->>>>>>> e10a54bbca48cabcf13d5bca90de401f3f2712fe
     }
+
     complaints.insert_one(complaint)
+
     return complaint["cid"]
 
 
-<<<<<<< HEAD
+# ---------------------------------------------------------------
+# Complaints - Read
+# ---------------------------------------------------------------
 def get_complaint(cid):
-    return complaints.find_one({"cid": cid}, {"_id": 0})
+    """Return a complaint by CID."""
+    return complaints.find_one(
+        {"cid": cid},
+        {"_id": 0},
+    )
 
 
-=======
->>>>>>> e10a54bbca48cabcf13d5bca90de401f3f2712fe
 def get_user_complaints(uid):
-    return list(complaints.find({"uid": uid}, {"_id": 0}).sort("created_at", -1))
+    """Return all complaints belonging to a user."""
+    return list(
+        complaints.find(
+            {"uid": uid},
+            {"_id": 0},
+        ).sort(
+            "created_at",
+            -1,
+        )
+    )
 
 
-<<<<<<< HEAD
 def get_all_complaints():
-    return list(complaints.find({}, {"_id": 0}).sort("created_at", -1))
+    """Return all complaints, newest first."""
+    return list(
+        complaints.find(
+            {},
+            {"_id": 0},
+        ).sort(
+            "created_at",
+            -1,
+        )
+    )
 
 
-def update_complaint(cid, status=None, department=None):
+# ---------------------------------------------------------------
+# Complaints - Update
+# ---------------------------------------------------------------
+def update_complaint(
+    cid,
+    status=None,
+    department=None,
+):
     """
-    Updates status and/or department. Returns the updated complaint,
-    or None if it does not exist. Raises ValueError for invalid values.
+    Update complaint status and/or department.
+
+    Returns:
+        Updated complaint, or None if complaint does not exist.
+
+    Raises:
+        ValueError for invalid values or empty updates.
     """
+
     complaint = complaints.find_one({"cid": cid})
+
     if not complaint:
         return None
 
     changes = {}
+
     if status is not None:
         if status not in STATUSES:
             raise ValueError("Invalid status.")
+
         changes["status"] = status
+
     if department is not None:
-        if department != "" and department not in DEPARTMENTS:
+        if (
+            department != ""
+            and department not in DEPARTMENTS
+        ):
             raise ValueError("Invalid department.")
+
         changes["department"] = department
-        # Assigning a department moves a new complaint to "Assigned"
-        if department and status is None and complaint["status"] == "Submitted":
+
+        # Assigning a department automatically moves
+        # a newly submitted complaint to Assigned.
+        if (
+            department
+            and status is None
+            and complaint.get("status") == "Submitted"
+        ):
             changes["status"] = "Assigned"
+
     if not changes:
         raise ValueError("Nothing to update.")
 
     changes["updated_at"] = datetime.now(timezone.utc)
+
     return complaints.find_one_and_update(
         {"cid": cid},
         {"$set": changes},
         return_document=ReturnDocument.AFTER,
         projection={"_id": 0},
     )
-=======
->>>>>>> e10a54bbca48cabcf13d5bca90de401f3f2712fe
