@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Campus Fix: report and track campus issues</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ============ AUTH VIEW ============ -->
+  <main id="auth-view" class="auth">
+    <section class="auth-hero" aria-hidden="true">
+      <div class="brand"><span class="brand-mark"></span>Campus Fix</div>
+      <h1>Spot a problem on campus? Report it once and watch it get fixed.</h1>
+
+      <div class="stub">
+        <div class="stub-top">
+          <strong>Water leaking in Block C, 2nd floor</strong>
+          <span class="badge status-progress">In progress</span>
+        </div>
+        <ol class="track track-demo">
+          <li class="done">Submitted</li>
+          <li class="done">Assigned</li>
+          <li class="done current">In progress</li>
+          <li>Resolved</li>
+        </ol>
+        <p class="stub-foot">Assigned to Plumbing</p>
+      </div>
+    </section>
+
+    <section class="auth-panel">
+      <div class="auth-card">
+        <div class="tabs" role="tablist">
+          <button role="tab" id="tab-login" aria-selected="true" aria-controls="login-form" class="tab active">Log in</button>
+          <button role="tab" id="tab-signup" aria-selected="false" aria-controls="signup-form" class="tab">Sign up</button>
+        </div>
+
+        <p id="auth-error" class="form-error" role="alert" hidden></p>
+
+        <form id="login-form" role="tabpanel" aria-labelledby="tab-login" novalidate>
+          <label>Email
+            <input type="email" name="email" autocomplete="email" required placeholder="you@college.edu">
+          </label>
+          <label>Password
+            <input type="password" name="password" autocomplete="current-password" required minlength="6">
+          </label>
+          <button type="submit" class="btn btn-primary">Log in</button>
+          <p class="hint">Demo admin: <code>admin@campus.edu</code> / <code>admin123</code></p>
+        </form>
+
+        <form id="signup-form" role="tabpanel" aria-labelledby="tab-signup" hidden novalidate>
+          <label>Full name
+            <input type="text" name="name" autocomplete="name" required>
+          </label>
+          <label>Email
+            <input type="email" name="email" autocomplete="email" required placeholder="you@college.edu">
+          </label>
+          <label>Password
+            <input type="password" name="password" autocomplete="new-password" required minlength="6">
+            <small>At least 6 characters</small>
+          </label>
+          <button type="submit" class="btn btn-primary">Create account</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ APP VIEW ============ -->
+  <div id="app-view" hidden>
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark"></span>Campus Fix</div>
+      <div class="topbar-right">
+        <span id="who" class="who"></span>
+        <span id="role-badge" class="role-badge"></span>
+        <button id="logout-btn" class="btn btn-ghost">Log out</button>
+      </div>
+    </header>
+
+    <!-- USER PANEL -->
+    <main id="user-panel" class="page user-grid" hidden>
+      <section class="card">
+        <h2>Report a problem</h2>
+        <form id="complaint-form" novalidate>
+          <label>Title
+            <input type="text" name="title" required maxlength="80" placeholder="e.g. Broken light in corridor">
+          </label>
+          <div class="row">
+            <label>Category
+              <select name="category" required></select>
+            </label>
+            <label>Location
+              <input type="text" name="location" required placeholder="e.g. Block C, Room 204">
+            </label>
+          </div>
+          <label>Description
+            <textarea name="description" rows="4" required placeholder="What is wrong, and since when?"></textarea>
+          </label>
+          <label>Photo (optional)
+            <input type="file" name="photo" accept="image/*">
+          </label>
+          <img id="photo-preview" class="photo-preview" alt="Selected photo preview" hidden>
+          <p id="complaint-error" class="form-error" role="alert" hidden></p>
+          <button type="submit" class="btn btn-primary">Submit complaint</button>
+        </form>
+      </section>
+
+      <section>
+        <h2>Your complaints</h2>
+        <div id="my-complaints" class="stack"></div>
+      </section>
+    </main>
+
+    <!-- ADMIN PANEL -->
+    <main id="admin-panel" class="page" hidden>
+      <h2>All complaints</h2>
+
+      <div id="stats" class="stats"></div>
+
+      <div class="filters">
+        <label>Status
+          <select id="f-status"><option value="">All</option></select>
+        </label>
+        <label>Category
+          <select id="f-category"><option value="">All</option></select>
+        </label>
+        <label>Location
+          <input type="search" id="f-location" placeholder="Search location">
+        </label>
+      </div>
+
+      <div id="all-complaints" class="stack"></div>
+    </main>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
