@@ -120,5 +120,5 @@ Not done yet:
 
 ## Team
 
-- Frontend: _add name_
-- Backend: _add name_
+- Frontend: Nilesh Bebarta, Sarthak Dubey
+- Backend: Vraj Prajapati, Mantra Patel
